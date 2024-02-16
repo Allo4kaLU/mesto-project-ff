@@ -8,7 +8,6 @@ function createCard(link, name, deleteCard) {
   cardElement.querySelector(".card__image").src = link;
   cardElement.querySelector(".card__image").alt = name;
   cardElement.querySelector(".card__title").textContent = name;
-  placesList.append(cardElement);
   cardElement
     .querySelector(".card__delete-button")
     .addEventListener("click", deleteCard);
@@ -20,5 +19,5 @@ function deleteCard(evt) {
 }
 // @todo: Вывести карточки на страницу
 initialCards.forEach(function (element) {
-  createCard(element.link, element.name, deleteCard);
+  placesList.append(createCard(element.link, element.name, deleteCard));
 });
