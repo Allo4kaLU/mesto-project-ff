@@ -47,12 +47,10 @@ function closeOnBackDropClickPopupEdit({ currentTarget, target }) {
 
 function openPopupEdit() {
   openModal(popupEdit);
-  document.addEventListener("keydown", handleEscape);
 }
 
 function removePopupEdit() {
   closeModal(popupEdit);
-  document.removeEventListener("keydown", handleEscape);
 }
 
 popupEdit.addEventListener("click", closeOnBackDropClickPopupEdit);
@@ -70,12 +68,10 @@ function closeOnBackDropClickPopupCard({ currentTarget, target }) {
 
 function openPopupCard() {
   openModal(popupCard);
-  document.addEventListener("keydown", handleEscape);
 }
 
 function removePopupCard() {
   closeModal(popupCard);
-  document.removeEventListener("keydown", handleEscape);
 }
 
 popupCard.addEventListener("click", closeOnBackDropClickPopupCard);
@@ -97,25 +93,14 @@ function openPopupImage(evt) {
   bigImage.alt = img.alt;
   bigImageTitle.textContent = img.alt;
   openModal(popupImage);
-  document.addEventListener("keydown", handleEscape);
 }
 
 function removePopupImage() {
   closeModal(popupImage);
-  document.removeEventListener("keydown", handleEscape);
 }
 
 popupImage.addEventListener("click", closeOnBackDropClickPopupImage);
 poputImageClose.addEventListener("click", removePopupImage);
-
-function handleEscape(evt) {
-  if (evt.key === "Escape") {
-    const openedPopup = document.querySelector(".popup_is-opened");
-    removePopupEdit();
-    removePopupImage();
-    removePopupCard();
-  }
-}
 
 // 1 модальное окно
 function fillProfileInputs() {
