@@ -1,44 +1,37 @@
 import './styles/index.css';
-import {initialCards} from './scripts/cards';
-// @todo: Темплейт карточки
-const cardTemplate = document.querySelector("#card-template").content;
+import {initialCards, createCard, likeCardButton, deleteCard} from './scripts/cards.js';
+import {openModal, closeModal} from './scripts/modal.js';
+
 // @todo: DOM узлы
 const placesList = document.querySelector(".places__list");
 
-
 const popupEdit = document.querySelector(".popup_type_edit");
-const editButton = document.querySelector(".profile__edit-button");
-const popupClose = document.querySelector(".popup__close");
+const buttonEdit = document.querySelector(".profile__edit-button");
+const popupEditClose = document.querySelector(".popup__close");
 
 const popupCard = document.querySelector(".popup_type_new-card");
-const cardButton = document.querySelector(".profile__add-button");
+const buttonCard = document.querySelector(".profile__add-button");
 const poputCardClose = document.querySelector(".popup__card__close");
 
 const popupImage = document.querySelector(".popup_type_image");
+const poputImageClose = document.querySelector(".popup__img__close");
 
+const formElement = document.forms.editProfile;
+const nameInput = document.querySelector('.profile__title');
+const jobInput = document.querySelector('.profile__description');
+const nameForm = formElement.elements.name;
+const descriptionForm = formElement.elements.description;
 
-// @todo: Функция создания карточки
-function createCard(link, name, deleteCard) {
-  const cardElement = cardTemplate.querySelector(".card").cloneNode(true);
-  cardElement.querySelector(".card__image").src = link;
-  cardElement.querySelector(".card__image").alt = name;
-  cardElement.querySelector(".card__title").textContent = name;
-  cardElement
-    .querySelector(".card__delete-button")
-    .addEventListener("click", deleteCard);
-  return cardElement;
-}
-// @todo: Функция удаления карточки
-function deleteCard(evt) {
-  evt.target.closest(".places__item").remove();
-}
+const formNewPlace = document.forms.newPlace;
+const textInput = document.querySelector('.popup__input_type_card-name');
+const urlInput = document.querySelector('.popup__input_type_url');
+
 // @todo: Вывести карточки на страницу
 initialCards.forEach(function (element) {
-  placesList.append(createCard(element.link, element.name, deleteCard));
+  placesList.append(createCard(element.link, element.name, deleteCard, likeCardButton, openPopupImage));
 });
 
-
-
+//первое модальное окно 
 function closeOnBackDropClickPopupEdit({ currentTarget, target }) {
   const popupEdit = currentTarget;
   const isClickedOnBackDrop = target === popupEdit;
@@ -47,27 +40,19 @@ function closeOnBackDropClickPopupEdit({ currentTarget, target }) {
   }
 }
 
-window.onkeydown = function( event ) {
-  if ( event.keyCode == 27 ) {
-      removePopupEdit();
-  }
-};
-
 function openPopupEdit() {
-  popupEdit.classList.add('popup_is-opened');
+  openModal(popupEdit);
 }
 
 function removePopupEdit() {
-  popupEdit.classList.remove('popup_is-opened');
-  popupEdit.classList.add('popup_is-animated');
+  closeModal(popupEdit);
 }
 
 popupEdit.addEventListener('click', closeOnBackDropClickPopupEdit);
-editButton.addEventListener('click', openPopupEdit);
-popupClose.addEventListener('click', removePopupEdit);
+buttonEdit.addEventListener('click', onOpenPopupEdit);
+popupEditClose.addEventListener('click', removePopupEdit);
 
-
-
+//второе модальное окно
 function closeOnBackDropClickPopupCard({ currentTarget, target }) {
   const popupCard = currentTarget;
   const isClickedOnBackDrop = target === popupCard;
@@ -76,35 +61,78 @@ function closeOnBackDropClickPopupCard({ currentTarget, target }) {
   }
 }
 
-window.onkeydown = function( event ) {
-  if ( event.keyCode == 27 ) {
-    removePopupCard();
-  }
-};
-
 function openPopupCard() {
-  popupCard.classList.add('popup_is-opened');
+  openModal(popupCard);
 }
 
 function removePopupCard() {
-  popupCard.classList.remove('popup_is-opened');
-  popupCard.classList.add('popup_is-animated');
+  closeModal(popupCard);
 }
 
 popupCard.addEventListener('click', closeOnBackDropClickPopupCard);
-cardButton.addEventListener('click', openPopupCard);
+buttonCard.addEventListener('click', openPopupCard);
 poputCardClose.addEventListener('click', removePopupCard);
 
+//третье модальное окно
+function closeOnBackDropClickPopupImage({ currentTarget, target }) {
+  const popupCard = currentTarget;
+  const isClickedOnBackDrop = target === popupCard;
+  if (isClickedOnBackDrop) {
+    removePopupImage(); 
+  }
+}
 
-const formElement = document.querySelector('.popup__form');
-const nameInput = document.querySelector('.popup__input_type_name');
-const jobInput = document.querySelector('.popup__input_type_description');
+function openPopupImage(evt) {
+  const img = evt.target;
+  document.querySelector('.popup__image').src = img.src;
+  document.querySelector('.popup__image').alt = img.alt;
+  document.querySelector('.popup__caption').textContent = img.alt;
+  openModal(popupImage);
+ }
 
+function removePopupImage() {
+  closeModal(popupImage);
+}
+
+popupImage.addEventListener('click', closeOnBackDropClickPopupImage);
+poputImageClose.addEventListener('click', removePopupImage);
+
+window.onkeydown = function( event ) {
+  if ( event.keyCode == 27 ) {
+    removePopupImage();
+    removePopupEdit();
+    removePopupCard();
+  }
+}
+
+// 1 модальное окно
+function handleForm() {
+  nameForm.value = nameInput.textContent;
+  descriptionForm.value = jobInput.textContent;
+}
+
+function onOpenPopupEdit() {
+  handleForm();
+  openPopupEdit();
+}
 
 function handleFormSubmit(evt) {
-  evt.preventDefault();
-  jobInput.textContent = jobInput.value;
-  nameInput.textContent = nameInput.value;   
+  evt.preventDefault();  
+  nameInput.textContent = nameForm.value;
+  jobInput.textContent = descriptionForm.value;
+  removePopupEdit();
 }
 
 formElement.addEventListener('submit', handleFormSubmit); 
+
+// 2 модальное окно
+function addCardFormSubmit(evt) {
+  evt.preventDefault();
+  const urlInputValue = urlInput.value;
+  const textInputValue = textInput.value;
+  placesList.prepend(createCard(urlInputValue, textInputValue, deleteCard, likeCardButton, openPopupImage));
+  formNewPlace.reset();
+  removePopupCard();
+}
+
+formNewPlace.addEventListener('submit', addCardFormSubmit);
