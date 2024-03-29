@@ -1,0 +1,20 @@
+.popup__input_type_error {
+    outline: none;
+    border-bottom-color: rgba(255, 0, 0, 1);
+  } 
+
+  .popup__input_type_error_active {
+    color: rgba(255, 0, 0, 1);
+  }
+
+  .popup__error_visible {
+    font-size: 9px;
+    margin: 0;
+  }
+
+  .popup__button_disabled {
+    background-color: transparent;
+    color: rgba(0, 0, 0, 1);
+    opacity: 20%;
+    outline: 1px solid rgba(0, 0, 0, 1);
+  }
