@@ -2,6 +2,8 @@ import "./styles/index.css";
 import { initialCards } from "./scripts/initialCards.js";
 import { createCard, likeCard, deleteCard } from "./scripts/cards.js";
 import { openModal, closeModal } from "./scripts/modal.js";
+import { getInitialCards, requestDeleteCard, requestEddCard } from "./scripts/api.js";
+import { getInitialUser } from "./scripts/api.js";
 
 // @todo: DOM узлы
 const placesList = document.querySelector(".places__list");
@@ -20,6 +22,7 @@ const poputImageClose = document.querySelector(".popup__img__close");
 const profileForm = document.forms.editProfile;
 const nameTitle = document.querySelector(".profile__title");
 const jobTitle = document.querySelector(".profile__description");
+const imgTitle = document.querySelector(".profile__image");
 const nameInput = profileForm.elements.name;
 const descriptionInput = profileForm.elements.description;
 
@@ -28,13 +31,6 @@ const bigImage = document.querySelector(".popup__image");
 const bigImageTitle = document.querySelector(".popup__caption");
 const textInput = document.querySelector(".popup__input_type_card-name");
 const urlInput = document.querySelector(".popup__input_type_url");
-
-// @todo: Вывести карточки на страницу
-initialCards.forEach(function (element) {
-  placesList.append(
-    createCard(element.link, element.name, deleteCard, likeCard, openPopupImage)
-  );
-});
 
 //первое модальное окно
 function closeOnBackDropClickPopupEdit({ currentTarget, target }) {
@@ -147,16 +143,16 @@ formNewPlace.addEventListener("submit", handleCardFormSubmit);
 // валидация форм
 const showInputError = (formSelector, inputSelector, errorMessage) => {
   const errorElement = formSelector.querySelector(`.${inputSelector.id}-error`);
-  inputSelector.classList.add('popup__input_type_error');
+  inputSelector.classList.add("popup__input_type_error");
   errorElement.textContent = errorMessage;
-  errorElement.classList.add('popup__input_type_error_active');
+  errorElement.classList.add("popup__input_type_error_active");
 };
 
 const hideInputError = (formSelector, inputSelector) => {
   const errorElement = formSelector.querySelector(`.${inputSelector.id}-error`);
-  inputSelector.classList.remove('popup__input_type_error');
-  errorElement.classList.remove('popup__input_type_error_active');
-  errorElement.textContent = '';
+  inputSelector.classList.remove("popup__input_type_error");
+  errorElement.classList.remove("popup__input_type_error_active");
+  errorElement.textContent = "";
 };
 
 // Функция, которая проверяет валидность поля
@@ -165,67 +161,99 @@ const enableValidationUR = (formSelector, inputSelector) => {
     inputSelector.setCustomValidity(inputSelector.dataset.errorMessage);
   } else {
     inputSelector.setCustomValidity("");
-  } 
+  }
   if (!inputSelector.validity.valid) {
     // Если поле не проходит валидацию, покажем ошибку
-    showInputError(formSelector, inputSelector, inputSelector.validationMessage);
+    showInputError(
+      formSelector,
+      inputSelector,
+      inputSelector.validationMessage
+    );
   } else {
     // Если проходит, скроем
     hideInputError(formSelector, inputSelector);
   }
 };
 
-function setEventListeners (formSelector) {
-  const inputList = Array.from(formSelector.querySelectorAll('.popup__input'));
-  const submitButtonSelector = formSelector.querySelector('.popup__button');
+function setEventListeners(formSelector) {
+  const inputList = Array.from(formSelector.querySelectorAll(".popup__input"));
+  const submitButtonSelector = formSelector.querySelector(".popup__button");
   toggleButtonState(inputList, submitButtonSelector);
   inputList.forEach((inputSelector) => {
-    inputSelector.addEventListener('input', function () {
+    inputSelector.addEventListener("input", function () {
       enableValidationUR(formSelector, inputSelector);
       toggleButtonState(inputList, submitButtonSelector);
     });
   });
-};
+}
 
-function enableValidation () {
-  const formList = Array.from(document.querySelectorAll('.popup__form'));
+function enableValidation() {
+  const formList = Array.from(document.querySelectorAll(".popup__form"));
   formList.forEach((formSelector) => {
-    formSelector.addEventListener('submit', (evt) => {
+    formSelector.addEventListener("submit", (evt) => {
       evt.preventDefault();
     });
     setEventListeners(formSelector);
   });
-};
+}
 
 enableValidation({
-  formSelector: '.popup__form',
-  inputSelector: '.popup__input',
-  submitButtonSelector: '.popup__button',
-  inactiveButtonClass: 'popup__button_disabled',
-  inputErrorClass: 'popup__input_type_error',
-  errorClass: 'popup__error_visible'
-}); 
+  formSelector: ".popup__form",
+  inputSelector: ".popup__input",
+  submitButtonSelector: ".popup__button",
+  inactiveButtonClass: "popup__button_disabled",
+  inputErrorClass: "popup__input_type_error",
+  errorClass: "popup__error_visible",
+});
 
 // Функция переключения кнопки
 
-function hasInvalidInput (inputList) {
+function hasInvalidInput(inputList) {
   return inputList.some((inputSelector) => {
     return !inputSelector.validity.valid;
-  })
-}; 
+  });
+}
 
-function toggleButtonState (inputList, submitButtonSelector) {
+function toggleButtonState(inputList, submitButtonSelector) {
   if (hasInvalidInput(inputList)) {
     submitButtonSelector.disabled = true;
-    submitButtonSelector.classList.add('popup__button_disabled');
+    submitButtonSelector.classList.add("popup__button_disabled");
   } else {
     submitButtonSelector.disabled = false;
-    submitButtonSelector.classList.remove('popup__button_disabled');
+    submitButtonSelector.classList.remove("popup__button_disabled");
   }
+}
+
+function clearValidation(formSelector) {
+  const errorElement = formSelector.querySelector(".popup__error_visible");
+  formSelector
+    .querySelector(".popup__input")
+    .classList.remove("popup__input_type_error");
+  errorElement.textContent = "";
+}
+
+// работа с API
+const renderNewCards = (element, userId) => {
+  placesList.append(
+    createCard(element, userId, 
+      (_id, cardElement) => {
+        requestDeleteCard(element._id)
+        .then(() => {
+          deleteCard(cardElement)
+        })
+      },
+     likeCard, openPopupImage)
+  );
 };
 
-function clearValidation (formSelector) {
-  const errorElement = formSelector.querySelector('.popup__error_visible');
-  formSelector.querySelector('.popup__input').classList.remove('popup__input_type_error');
-  errorElement.textContent = '';
-}
+getInitialUser().then((res) => {
+  nameTitle.textContent = res.name;
+  jobTitle.textContent = res.about;
+  imgTitle.src = res.avatar;
+});
+
+Promise.all([getInitialCards(), getInitialUser()]).then(([result, res]) => {
+  console.log({ result, res });
+  result.forEach(renderNewCards);
+});
+
