@@ -10,7 +10,7 @@ const hendleResponse = (res) => {
   if (res.ok) {
     return res.json();
   }
-  throw new Error['Error'];
+  return Promise.reject(`Ошибка: ${res.status}`);
 }
 
 export const getInitialUser = () => {
@@ -33,7 +33,7 @@ export const requestEditProfile = (edit) => {
   }).then(hendleResponse);
 }
 
-export const requestEddCard = (card) => {
+export const requestAddCard = (card) => {
   return fetch(`${config.baseUrl}/cards`, {
     method: 'POST',
     headers: config.headers,

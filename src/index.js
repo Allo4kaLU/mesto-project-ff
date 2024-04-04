@@ -2,7 +2,7 @@ import "./styles/index.css";
 import { initialCards } from "./scripts/initialCards.js";
 import { createCard, likeCard, deleteCard } from "./scripts/cards.js";
 import { openModal, closeModal } from "./scripts/modal.js";
-import { getInitialCards, requestDeleteCard, requestEddCard, requestEditProfile } from "./scripts/api.js";
+import { getInitialCards, requestDeleteCard, requestAddCard, requestEditProfile } from "./scripts/api.js";
 import { getInitialUser } from "./scripts/api.js";
 
 // @todo: DOM узлы
@@ -38,6 +38,19 @@ const bigImage = document.querySelector(".popup__image");
 const bigImageTitle = document.querySelector(".popup__caption");
 const textInput = document.querySelector(".popup__input_type_card-name");
 const urlInput = document.querySelector(".popup__input_type_url");
+
+const renderNewCards = (element, userId) => {
+  placesList.append(
+    createCard(element, userId, 
+      (_id, cardElement) => {
+        elementFormDeleteCard._id = _id;
+        elementFormDeleteCard.cardElement = cardElement;
+        openModal(popupDeleteCard);
+        closeModal(popupDeleteCard);
+      },
+     likeCard, openPopupImage)
+  );
+};
 
 //первое модальное окно
 function closeOnBackDropClickPopupEdit({ currentTarget, target }) {
@@ -119,13 +132,11 @@ function onOpenPopupEdit() {
 
 function handleProfileFormSubmit(evt) {
   evt.preventDefault();
-
   requestEditProfile({ name: nameInput.value, about: descriptionInput.value })
-  // тут нужна функция заполнения формы профиля новыми данными
   .then(() => {
-    fillProfileInputs()
-  }) 
-  
+    nameTitle.textContent = nameInput.value;
+    jobTitle.textContent = descriptionInput.value;
+  })   
   removePopupEdit();
 }
 
@@ -135,8 +146,11 @@ profileForm.addEventListener("submit", handleProfileFormSubmit);
 function handleCardFormSubmit(evt) {
   evt.preventDefault();
 
-  requestEddCard( {name: textInput.value, link: urlInput.value} )
-  // тут нужна функция создания карточки, но она не понимает _id
+  requestAddCard( {name: textInput.value, link: urlInput.value} )
+  .then((card) => {
+    renderNewCards(card, currentUserId);
+  })
+  
   formNewPlace.reset();
   removePopupCard();
 }
@@ -262,18 +276,7 @@ popupDeleteCard.addEventListener("click", closeOnBackDropClickPopupDeleteCard);
 popupDeleteCardClose.addEventListener('click', closepopupDeleteCard);
 
 // работа с API
-const renderNewCards = (element, userId) => {
-  placesList.append(
-    createCard(element, userId, 
-      (_id, cardElement) => {
-        elementFormDeleteCard._id = _id;
-        elementFormDeleteCard.cardElement = cardElement;
-        openModal(popupDeleteCard);
-        closeModal(popupDeleteCard);
-      },
-     likeCard, openPopupImage)
-  );
-};
+
 
 getInitialUser().then((res) => {
   nameTitle.textContent = res.name;
