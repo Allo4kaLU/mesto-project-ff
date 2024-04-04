@@ -11,7 +11,7 @@ export function createCard(element, userId, onDeleteCard, likeCard, openPopupIma
   //console.log(element.owner._id);
   console.log(userId);
 
-  if (userId !== element.owner._id) {
+  if (userId === element.owner._id) {
     cardDeleteButton.addEventListener('click', () => onDeleteCard(element._id, cardElement))
    } else {  
     cardDeleteButton.remove()

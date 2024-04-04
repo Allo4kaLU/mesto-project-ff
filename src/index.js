@@ -2,7 +2,7 @@ import "./styles/index.css";
 import { initialCards } from "./scripts/initialCards.js";
 import { createCard, likeCard, deleteCard } from "./scripts/cards.js";
 import { openModal, closeModal } from "./scripts/modal.js";
-import { getInitialCards, requestDeleteCard, requestEddCard } from "./scripts/api.js";
+import { getInitialCards, requestDeleteCard, requestEddCard, requestEditProfile } from "./scripts/api.js";
 import { getInitialUser } from "./scripts/api.js";
 
 // @todo: DOM узлы
@@ -15,9 +15,16 @@ const popupEditClose = document.querySelector(".popup__close");
 const popupCard = document.querySelector(".popup_type_new-card");
 const buttonCard = document.querySelector(".profile__add-button");
 const poputCardClose = document.querySelector(".popup__card__close");
+const buttonSaveCard = document.querySelector(".popup__button-card-chang");
+let currentUserId;
 
 const popupImage = document.querySelector(".popup_type_image");
 const poputImageClose = document.querySelector(".popup__img__close");
+
+const popupDeleteCard = document.querySelector(".popup_type_delete");
+const formDeleteCard = popupDeleteCard.querySelector(".popup__form");
+const popupDeleteCardClose = popupDeleteCard.querySelector(".popup__close");
+let elementFormDeleteCard = {};
 
 const profileForm = document.forms.editProfile;
 const nameTitle = document.querySelector(".profile__title");
@@ -112,33 +119,30 @@ function onOpenPopupEdit() {
 
 function handleProfileFormSubmit(evt) {
   evt.preventDefault();
-  nameTitle.textContent = nameInput.value;
-  jobTitle.textContent = descriptionInput.value;
+
+  requestEditProfile({ name: nameInput.value, about: descriptionInput.value })
+  // тут нужна функция заполнения формы профиля новыми данными
+  .then(() => {
+    fillProfileInputs()
+  }) 
+  
   removePopupEdit();
 }
 
 profileForm.addEventListener("submit", handleProfileFormSubmit);
-
+ 
 // 2 модальное окно
 function handleCardFormSubmit(evt) {
   evt.preventDefault();
-  const urlInputValue = urlInput.value;
-  const textInputValue = textInput.value;
-  placesList.prepend(
-    createCard(
-      urlInputValue,
-      textInputValue,
-      deleteCard,
-      likeCard,
-      openPopupImage
-    )
-  );
+
+  requestEddCard( {name: textInput.value, link: urlInput.value} )
+  // тут нужна функция создания карточки, но она не понимает _id
   formNewPlace.reset();
-  clearValidation();
   removePopupCard();
 }
 
 formNewPlace.addEventListener("submit", handleCardFormSubmit);
+
 
 // валидация форм
 const showInputError = (formSelector, inputSelector, errorMessage) => {
@@ -232,15 +236,40 @@ function clearValidation(formSelector) {
   errorElement.textContent = "";
 }
 
+// модальное окно удаления карточки
+formDeleteCard.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+  requestDeleteCard(elementFormDeleteCard._id)
+        .then(() => {
+          deleteCard(elementFormDeleteCard.cardElement);
+          closeModal(popupDeleteCard);
+       })
+})
+
+function closeOnBackDropClickPopupDeleteCard ({ currentTarget, target }) {
+  const popupDeleteCard = currentTarget;
+  const isClickedOnBackDrop = target === popupDeleteCard;
+  if (isClickedOnBackDrop) {
+    closeModal(popupDeleteCard);
+  }
+}
+
+function closepopupDeleteCard () {
+  closeModal(popupDeleteCard);
+}
+
+popupDeleteCard.addEventListener("click", closeOnBackDropClickPopupDeleteCard);
+popupDeleteCardClose.addEventListener('click', closepopupDeleteCard);
+
 // работа с API
 const renderNewCards = (element, userId) => {
   placesList.append(
     createCard(element, userId, 
       (_id, cardElement) => {
-        requestDeleteCard(element._id)
-        .then(() => {
-          deleteCard(cardElement)
-        })
+        elementFormDeleteCard._id = _id;
+        elementFormDeleteCard.cardElement = cardElement;
+        openModal(popupDeleteCard);
+        closeModal(popupDeleteCard);
       },
      likeCard, openPopupImage)
   );
@@ -253,7 +282,8 @@ getInitialUser().then((res) => {
 });
 
 Promise.all([getInitialCards(), getInitialUser()]).then(([result, res]) => {
-  console.log({ result, res });
-  result.forEach(renderNewCards);
+  result.forEach((result) => {
+    currentUserId = res._id;
+    renderNewCards(result, res._id)
+  });
 });
-
