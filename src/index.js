@@ -2,8 +2,7 @@ import "./styles/index.css";
 import { initialCards } from "./scripts/initialCards.js";
 import { createCard, likeCard, deleteCard } from "./scripts/cards.js";
 import { openModal, closeModal } from "./scripts/modal.js";
-import { getInitialCards, requestDeleteCard, requestAddCard, requestEditProfile } from "./scripts/api.js";
-import { getInitialUser } from "./scripts/api.js";
+import { getInitialCards, getInitialUser, requestDeleteCard, requestAddCard, requestEditProfile, requestAvatar, requestLikeCard } from "./scripts/api.js";
 
 // @todo: DOM узлы
 const placesList = document.querySelector(".places__list");
@@ -26,10 +25,17 @@ const formDeleteCard = popupDeleteCard.querySelector(".popup__form");
 const popupDeleteCardClose = popupDeleteCard.querySelector(".popup__close");
 let elementFormDeleteCard = {};
 
+
 const profileForm = document.forms.editProfile;
 const nameTitle = document.querySelector(".profile__title");
 const jobTitle = document.querySelector(".profile__description");
+
 const imgTitle = document.querySelector(".profile__image");
+const popupChangAvatar = document.querySelector(".popup_type_avatar");
+const formChangAvatar = popupChangAvatar.querySelector(".popup__form");
+const popupChangAvatarClose = popupChangAvatar.querySelector(".popup__close");
+const avatarInput = formChangAvatar.elements.avatar;
+
 const nameInput = profileForm.elements.name;
 const descriptionInput = profileForm.elements.description;
 
@@ -40,7 +46,7 @@ const textInput = document.querySelector(".popup__input_type_card-name");
 const urlInput = document.querySelector(".popup__input_type_url");
 
 const renderNewCards = (element, userId) => {
-  placesList.append(
+  placesList.prepend(
     createCard(element, userId, 
       (_id, cardElement) => {
         elementFormDeleteCard._id = _id;
@@ -48,7 +54,11 @@ const renderNewCards = (element, userId) => {
         openModal(popupDeleteCard);
         closeModal(popupDeleteCard);
       },
-     likeCard, openPopupImage)
+      (_id, cardElement) => {
+        elementLikeCard._id = _id;
+        elementLikeCard.cardElement = cardElement;
+      }, 
+     openPopupImage)
   );
 };
 
@@ -89,6 +99,7 @@ function openPopupCard() {
 
 function removePopupCard() {
   closeModal(popupCard);
+  formNewPlace.reset();
 }
 
 popupCard.addEventListener("click", closeOnBackDropClickPopupCard);
@@ -136,7 +147,7 @@ function handleProfileFormSubmit(evt) {
   .then(() => {
     nameTitle.textContent = nameInput.value;
     jobTitle.textContent = descriptionInput.value;
-  })   
+  })  
   removePopupEdit();
 }
 
@@ -149,9 +160,7 @@ function handleCardFormSubmit(evt) {
   requestAddCard( {name: textInput.value, link: urlInput.value} )
   .then((card) => {
     renderNewCards(card, currentUserId);
-  })
-  
-  formNewPlace.reset();
+  })  
   removePopupCard();
 }
 
@@ -281,12 +290,47 @@ popupDeleteCardClose.addEventListener('click', closepopupDeleteCard);
 getInitialUser().then((res) => {
   nameTitle.textContent = res.name;
   jobTitle.textContent = res.about;
-  imgTitle.src = res.avatar;
+  imgTitle.url = res.avatar;
 });
 
 Promise.all([getInitialCards(), getInitialUser()]).then(([result, res]) => {
-  result.forEach((result) => {
+  result.reverse().forEach((result) => {
     currentUserId = res._id;
     renderNewCards(result, res._id)
   });
 });
+
+//изменение аватара
+
+function closeOnBackDropClickPopupAvatar({ currentTarget, target }) {
+  const popupChangAvatar = currentTarget;
+  const isClickedOnBackDrop = target === popupChangAvatar;
+  if (isClickedOnBackDrop) {
+    removePopupChangAvatar();
+  }
+}
+
+function removePopupChangAvatar() {
+  closeModal(popupChangAvatar);
+}
+
+function onOpenPopupChangAvatar() {
+  openModal(popupChangAvatar);
+}
+
+imgTitle.addEventListener('click', onOpenPopupChangAvatar)
+
+popupChangAvatar.addEventListener("click", closeOnBackDropClickPopupAvatar);
+popupChangAvatarClose.addEventListener("click", removePopupChangAvatar);
+
+function handleChangAvatarSubmit(evt) {
+  evt.preventDefault();
+
+requestAvatar({ avatar: avatarInput.value })
+  .then(() => {
+    avatarInput.value = imgTitle.url;
+  })   
+  removePopupChangAvatar();
+}
+
+formChangAvatar.addEventListener("submit", handleChangAvatarSubmit);

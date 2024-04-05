@@ -124,6 +124,27 @@
         </div>        
       </div>
 
+      <div class="popup popup_type_avatar">
+        <div class="popup__content popup__content_type_avatar">
+          <button type="button" class="popup__close"></button>
+          <h3 class="popup__title">Обновить аватар</h3>
+          <form class="popup__form" name="formAvatar" novalidate>
+            <input
+              type="url"
+              name="avatar"
+              class="popup__input popup__input_type_url"
+              placeholder="Ссылка на картинку"
+              required
+              id="form__newPlace-card-url-input"
+            />
+            <span class="popup__error_visible form__newPlace-card-url-input-error"></span>
+            <button type="submit" class="button popup__button popup__button-avatar">
+              Да
+            </button>
+          </form>          
+        </div>        
+      </div>
+
     </div>
     
     <template id="card-template">
@@ -131,9 +152,11 @@
         <img class="card__image" src="" alt="" />
         <button type="button" class="card__delete-button"></button>
         <div class="card__description">
-          <h2 class="card__title"></h2>          
+          <h2 class="card__title"></h2>     
+          <div class="card__like-box">
             <button type="button" class="card__like-button"></button>
-            <p class="card__like-number"></p>        
+            <span class="card__like-number"></span>
+          </div>                                  
         </div>
       </li>
     </template>

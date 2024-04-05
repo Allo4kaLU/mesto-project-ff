@@ -48,3 +48,19 @@ export const requestDeleteCard = (id) => {
   })
   .then(hendleResponse)
 }
+
+export const requestLikeCard = (id) => {
+  return fetch(`${config.baseUrl}/cards/likes/${id}`, {
+    method: 'PUT',
+    headers: config.headers,
+  })
+  .then(hendleResponse)
+}
+
+export const requestAvatar = (ava) => {
+  return fetch(`${config.baseUrl}/users/me/avatar`, {
+    method: 'PATCH',
+    headers: config.headers,
+    body: JSON.stringify(ava)
+  }).then(hendleResponse);
+}
