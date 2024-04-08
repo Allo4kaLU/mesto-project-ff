@@ -1,8 +1,8 @@
 import "./styles/index.css";
-import { initialCards } from "./scripts/initialCards.js";
 import { createCard, likeCard, deleteCard } from "./scripts/cards.js";
 import { openModal, closeModal } from "./scripts/modal.js";
-import { getInitialCards, getInitialUser, requestDeleteCard, requestAddCard, requestEditProfile, requestAvatar, requestLikeCard } from "./scripts/api.js";
+import { getInitialCards, getInitialUser, requestDeleteCard, requestAddCard, requestEditProfile, requestAvatar } from "./scripts/api.js";
+import { clearValidation, enableValidation } from "./scripts/validation";
 
 // @todo: DOM узлы
 const placesList = document.querySelector(".places__list");
@@ -14,7 +14,6 @@ const popupEditClose = document.querySelector(".popup__close");
 const popupCard = document.querySelector(".popup_type_new-card");
 const buttonCard = document.querySelector(".profile__add-button");
 const poputCardClose = document.querySelector(".popup__card__close");
-const buttonSaveCard = document.querySelector(".popup__button-card-chang");
 let currentUserId;
 
 const popupImage = document.querySelector(".popup_type_image");
@@ -54,10 +53,7 @@ const renderNewCards = (element, userId) => {
         openModal(popupDeleteCard);
         closeModal(popupDeleteCard);
       },
-      (_id, cardElement) => {
-        elementLikeCard._id = _id;
-        elementLikeCard.cardElement = cardElement;
-      }, 
+      likeCard, 
      openPopupImage)
   );
 };
@@ -95,6 +91,7 @@ function closeOnBackDropClickPopupCard({ currentTarget, target }) {
 
 function openPopupCard() {
   openModal(popupCard);
+  clearValidation(popupCard);
 }
 
 function removePopupCard() {
@@ -166,64 +163,7 @@ function handleCardFormSubmit(evt) {
 
 formNewPlace.addEventListener("submit", handleCardFormSubmit);
 
-
-// валидация форм
-const showInputError = (formSelector, inputSelector, errorMessage) => {
-  const errorElement = formSelector.querySelector(`.${inputSelector.id}-error`);
-  inputSelector.classList.add("popup__input_type_error");
-  errorElement.textContent = errorMessage;
-  errorElement.classList.add("popup__input_type_error_active");
-};
-
-const hideInputError = (formSelector, inputSelector) => {
-  const errorElement = formSelector.querySelector(`.${inputSelector.id}-error`);
-  inputSelector.classList.remove("popup__input_type_error");
-  errorElement.classList.remove("popup__input_type_error_active");
-  errorElement.textContent = "";
-};
-
-// Функция, которая проверяет валидность поля
-const enableValidationUR = (formSelector, inputSelector) => {
-  if (inputSelector.validity.patternMismatch) {
-    inputSelector.setCustomValidity(inputSelector.dataset.errorMessage);
-  } else {
-    inputSelector.setCustomValidity("");
-  }
-  if (!inputSelector.validity.valid) {
-    // Если поле не проходит валидацию, покажем ошибку
-    showInputError(
-      formSelector,
-      inputSelector,
-      inputSelector.validationMessage
-    );
-  } else {
-    // Если проходит, скроем
-    hideInputError(formSelector, inputSelector);
-  }
-};
-
-function setEventListeners(formSelector) {
-  const inputList = Array.from(formSelector.querySelectorAll(".popup__input"));
-  const submitButtonSelector = formSelector.querySelector(".popup__button");
-  toggleButtonState(inputList, submitButtonSelector);
-  inputList.forEach((inputSelector) => {
-    inputSelector.addEventListener("input", function () {
-      enableValidationUR(formSelector, inputSelector);
-      toggleButtonState(inputList, submitButtonSelector);
-    });
-  });
-}
-
-function enableValidation() {
-  const formList = Array.from(document.querySelectorAll(".popup__form"));
-  formList.forEach((formSelector) => {
-    formSelector.addEventListener("submit", (evt) => {
-      evt.preventDefault();
-    });
-    setEventListeners(formSelector);
-  });
-}
-
+// валидация
 enableValidation({
   formSelector: ".popup__form",
   inputSelector: ".popup__input",
@@ -232,32 +172,6 @@ enableValidation({
   inputErrorClass: "popup__input_type_error",
   errorClass: "popup__error_visible",
 });
-
-// Функция переключения кнопки
-
-function hasInvalidInput(inputList) {
-  return inputList.some((inputSelector) => {
-    return !inputSelector.validity.valid;
-  });
-}
-
-function toggleButtonState(inputList, submitButtonSelector) {
-  if (hasInvalidInput(inputList)) {
-    submitButtonSelector.disabled = true;
-    submitButtonSelector.classList.add("popup__button_disabled");
-  } else {
-    submitButtonSelector.disabled = false;
-    submitButtonSelector.classList.remove("popup__button_disabled");
-  }
-}
-
-function clearValidation(formSelector) {
-  const errorElement = formSelector.querySelector(".popup__error_visible");
-  formSelector
-    .querySelector(".popup__input")
-    .classList.remove("popup__input_type_error");
-  errorElement.textContent = "";
-}
 
 // модальное окно удаления карточки
 formDeleteCard.addEventListener('submit', (evt) => {
@@ -286,11 +200,10 @@ popupDeleteCardClose.addEventListener('click', closepopupDeleteCard);
 
 // работа с API
 
-
 getInitialUser().then((res) => {
   nameTitle.textContent = res.name;
   jobTitle.textContent = res.about;
-  imgTitle.url = res.avatar;
+  imgTitle.style.backgroundImage =`url('${res.avatar}')`;
 });
 
 Promise.all([getInitialCards(), getInitialUser()]).then(([result, res]) => {
@@ -312,13 +225,15 @@ function closeOnBackDropClickPopupAvatar({ currentTarget, target }) {
 
 function removePopupChangAvatar() {
   closeModal(popupChangAvatar);
+  formChangAvatar.reset();
 }
 
 function onOpenPopupChangAvatar() {
   openModal(popupChangAvatar);
+  clearValidation(popupChangAvatar);
 }
 
-imgTitle.addEventListener('click', onOpenPopupChangAvatar)
+imgTitle.addEventListener('click', onOpenPopupChangAvatar);
 
 popupChangAvatar.addEventListener("click", closeOnBackDropClickPopupAvatar);
 popupChangAvatarClose.addEventListener("click", removePopupChangAvatar);
@@ -327,8 +242,9 @@ function handleChangAvatarSubmit(evt) {
   evt.preventDefault();
 
 requestAvatar({ avatar: avatarInput.value })
-  .then(() => {
-    avatarInput.value = imgTitle.url;
+  .then((res) => {
+    console.log(res.avatar);
+    imgTitle.style.backgroundImage =`url('${res.avatar}')`;
   })   
   removePopupChangAvatar();
 }

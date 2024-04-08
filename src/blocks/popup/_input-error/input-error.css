@@ -8,8 +8,12 @@
   }
 
   .popup__error_visible {
-    font-size: 9px;
+    font-size: 12px;
+    min-height: 28px;
+    display: block;
     margin: 0;
+    margin-top: 7px;
+    
   }
 
   .popup__button_disabled {

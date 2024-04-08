@@ -57,6 +57,14 @@ export const requestLikeCard = (id) => {
   .then(hendleResponse)
 }
 
+export const requestUnLikeCard = (id) => {
+  return fetch(`${config.baseUrl}/cards/likes/${id}`, {
+    method: 'DELETE',
+    headers: config.headers,
+  })
+  .then(hendleResponse)
+}
+
 export const requestAvatar = (ava) => {
   return fetch(`${config.baseUrl}/users/me/avatar`, {
     method: 'PATCH',
