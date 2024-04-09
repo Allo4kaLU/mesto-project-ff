@@ -1,8 +1,15 @@
 import "./styles/index.css";
 import { createCard, likeCard, deleteCard } from "./scripts/cards.js";
 import { openModal, closeModal } from "./scripts/modal.js";
-import { getInitialCards, getInitialUser, requestDeleteCard, requestAddCard, requestEditProfile, requestAvatar } from "./scripts/api.js";
-import { clearValidation, enableValidation } from "./scripts/validation";
+import {
+  getInitialCards,
+  getInitialUser,
+  requestDeleteCard,
+  requestAddCard,
+  requestEditProfile,
+  requestAvatar,
+} from "./scripts/api.js";
+import { clearValidation, enableValidation, validationConfig } from "./scripts/validation";
 
 // @todo: DOM узлы
 const placesList = document.querySelector(".places__list");
@@ -10,10 +17,12 @@ const placesList = document.querySelector(".places__list");
 const popupEdit = document.querySelector(".popup_type_edit");
 const buttonEdit = document.querySelector(".profile__edit-button");
 const popupEditClose = document.querySelector(".popup__close");
+const popupEditButtonSave = document.querySelector(".popup__button-edit-chang");
 
 const popupCard = document.querySelector(".popup_type_new-card");
 const buttonCard = document.querySelector(".profile__add-button");
 const poputCardClose = document.querySelector(".popup__card__close");
+const popupCardButtonSave = document.querySelector(".popup__button-card-chang");
 let currentUserId;
 
 const popupImage = document.querySelector(".popup_type_image");
@@ -22,8 +31,8 @@ const poputImageClose = document.querySelector(".popup__img__close");
 const popupDeleteCard = document.querySelector(".popup_type_delete");
 const formDeleteCard = popupDeleteCard.querySelector(".popup__form");
 const popupDeleteCardClose = popupDeleteCard.querySelector(".popup__close");
-let elementFormDeleteCard = {};
-
+const popupDeleteCardButtonSave = document.querySelector(".popup__button-delete-card");
+const elementFormDeleteCard = {};
 
 const profileForm = document.forms.editProfile;
 const nameTitle = document.querySelector(".profile__title");
@@ -33,6 +42,7 @@ const imgTitle = document.querySelector(".profile__image");
 const popupChangAvatar = document.querySelector(".popup_type_avatar");
 const formChangAvatar = popupChangAvatar.querySelector(".popup__form");
 const popupChangAvatarClose = popupChangAvatar.querySelector(".popup__close");
+const popupChangAvatarButtonSave = document.querySelector(".popup__button-avatar");
 const avatarInput = formChangAvatar.elements.avatar;
 
 const nameInput = profileForm.elements.name;
@@ -46,17 +56,23 @@ const urlInput = document.querySelector(".popup__input_type_url");
 
 const renderNewCards = (element, userId) => {
   placesList.prepend(
-    createCard(element, userId, 
+    createCard(
+      element,
+      userId,
       (_id, cardElement) => {
         elementFormDeleteCard._id = _id;
         elementFormDeleteCard.cardElement = cardElement;
         openModal(popupDeleteCard);
         closeModal(popupDeleteCard);
       },
-      likeCard, 
-     openPopupImage)
+      likeCard,
+      openPopupImage
+    )
   );
 };
+
+//if (element.likes.name = nameTitle.textContent) {
+ // element.cardLikeButton.classList.add("card__like-button_is-active");}
 
 //первое модальное окно
 function closeOnBackDropClickPopupEdit({ currentTarget, target }) {
@@ -141,49 +157,60 @@ function onOpenPopupEdit() {
 function handleProfileFormSubmit(evt) {
   evt.preventDefault();
   requestEditProfile({ name: nameInput.value, about: descriptionInput.value })
-  .then(() => {
-    nameTitle.textContent = nameInput.value;
-    jobTitle.textContent = descriptionInput.value;
-  })  
-  removePopupEdit();
+    .then((res) => {
+      popupEditButtonSave.textContent = "Сохранение..."
+      nameTitle.textContent = res.name;
+      jobTitle.textContent = res.about;      
+      removePopupEdit();      
+    })
+    .catch((err) => console.log(`Ошибка.....: ${err}`))
+    .finally(() => {
+      popupEditButtonSave.textContent = "Сохранить";
+    });
 }
 
 profileForm.addEventListener("submit", handleProfileFormSubmit);
- 
+
 // 2 модальное окно
 function handleCardFormSubmit(evt) {
   evt.preventDefault();
 
-  requestAddCard( {name: textInput.value, link: urlInput.value} )
-  .then((card) => {
+  requestAddCard({ name: textInput.value, link: urlInput.value })
+    .then((card) => {
+      popupCardButtonSave.textContent = "Сохранение..."
     renderNewCards(card, currentUserId);
-  })  
-  removePopupCard();
+    removePopupCard();
+    })
+    .catch((err) => console.log(`Ошибка.....: ${err}`))
+    .finally(() => {
+      popupCardButtonSave.textContent = "Сохранить";
+      popupCardButtonSave.classList.add(validationConfig.inactivButtonClass);
+    });
 }
 
 formNewPlace.addEventListener("submit", handleCardFormSubmit);
 
 // валидация
-enableValidation({
-  formSelector: ".popup__form",
-  inputSelector: ".popup__input",
-  submitButtonSelector: ".popup__button",
-  inactiveButtonClass: "popup__button_disabled",
-  inputErrorClass: "popup__input_type_error",
-  errorClass: "popup__error_visible",
-});
+enableValidation(validationConfig);
 
 // модальное окно удаления карточки
-formDeleteCard.addEventListener('submit', (evt) => {
+formDeleteCard.addEventListener("submit", (evt) => {
   evt.preventDefault();
   requestDeleteCard(elementFormDeleteCard._id)
-        .then(() => {
-          deleteCard(elementFormDeleteCard.cardElement);
-          closeModal(popupDeleteCard);
-       })
-})
+    .then(() => {
+      popupDeleteCardButtonSave.textContent = "Удаление..."
+      deleteCard(elementFormDeleteCard.cardElement);
+      closeModal(popupDeleteCard);
+    })
+    .catch((err) => console.log(`Ошибка.....: ${err}`))
+    .finally(() => {
+      popupDeleteCardButtonSave.textContent = "Да";
+    });
+});
 
-function closeOnBackDropClickPopupDeleteCard ({ currentTarget, target }) {
+
+
+function closeOnBackDropClickPopupDeleteCard({ currentTarget, target }) {
   const popupDeleteCard = currentTarget;
   const isClickedOnBackDrop = target === popupDeleteCard;
   if (isClickedOnBackDrop) {
@@ -191,27 +218,26 @@ function closeOnBackDropClickPopupDeleteCard ({ currentTarget, target }) {
   }
 }
 
-function closepopupDeleteCard () {
+function closepopupDeleteCard() {
   closeModal(popupDeleteCard);
 }
 
 popupDeleteCard.addEventListener("click", closeOnBackDropClickPopupDeleteCard);
-popupDeleteCardClose.addEventListener('click', closepopupDeleteCard);
+popupDeleteCardClose.addEventListener("click", closepopupDeleteCard);
 
 // работа с API
 
-getInitialUser().then((res) => {
-  nameTitle.textContent = res.name;
-  jobTitle.textContent = res.about;
-  imgTitle.style.backgroundImage =`url('${res.avatar}')`;
-});
-
-Promise.all([getInitialCards(), getInitialUser()]).then(([result, res]) => {
-  result.reverse().forEach((result) => {
-    currentUserId = res._id;
-    renderNewCards(result, res._id)
-  });
-});
+Promise.all([getInitialCards(), getInitialUser()])
+  .then(([result, res]) => {
+    nameTitle.textContent = res.name;
+    jobTitle.textContent = res.about;
+    imgTitle.style.backgroundImage = `url('${res.avatar}')`;
+    result.reverse().forEach((result) => {
+      currentUserId = res._id;
+      renderNewCards(result, res._id);
+    });
+  })
+  .catch((err) => console.log(`Ошибка.....: ${err}`));
 
 //изменение аватара
 
@@ -233,7 +259,7 @@ function onOpenPopupChangAvatar() {
   clearValidation(popupChangAvatar);
 }
 
-imgTitle.addEventListener('click', onOpenPopupChangAvatar);
+imgTitle.addEventListener("click", onOpenPopupChangAvatar);
 
 popupChangAvatar.addEventListener("click", closeOnBackDropClickPopupAvatar);
 popupChangAvatarClose.addEventListener("click", removePopupChangAvatar);
@@ -241,12 +267,17 @@ popupChangAvatarClose.addEventListener("click", removePopupChangAvatar);
 function handleChangAvatarSubmit(evt) {
   evt.preventDefault();
 
-requestAvatar({ avatar: avatarInput.value })
-  .then((res) => {
-    console.log(res.avatar);
-    imgTitle.style.backgroundImage =`url('${res.avatar}')`;
-  })   
-  removePopupChangAvatar();
+  requestAvatar({ avatar: avatarInput.value })
+    .then((res) => {
+      popupChangAvatarButtonSave.textContent = "Сохранение..."
+      imgTitle.style.backgroundImage = `url('${res.avatar}')`;
+      removePopupChangAvatar();
+    })
+    .catch((err) => console.log(`Ошибка.....: ${err}`))
+    .finally(() => {
+      popupChangAvatarButtonSave.textContent = "Да";
+      popupChangAvatarButtonSave.classList.add("popup__button_disabled");
+    });
 }
 
 formChangAvatar.addEventListener("submit", handleChangAvatarSubmit);

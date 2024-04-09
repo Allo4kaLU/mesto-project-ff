@@ -1,5 +1,4 @@
 import { requestLikeCard, requestUnLikeCard } from "./api";
-let elementLikeCard = {};
 const cardTemplate = document.querySelector("#card-template").content;
 export function createCard(
   element,
@@ -26,32 +25,42 @@ export function createCard(
   } else {
     cardDeleteButton.remove();
   }
-    
+
   cardLikeButton.addEventListener("click", () => {
-    likeCard(cardLikeButton);
     if (cardLikeButton.classList.contains("card__like-button_is-active")) {
-      requestLikeCard(element._id)
-    .then((res) => {
-      cardLikeNumber.textContent = res.likes.length;
-    })
-    } else {
       requestUnLikeCard(element._id)
-      .then((res) => {
-        cardLikeNumber.textContent = res.likes.length;
-      })
+        .then((res) => {
+          likeCard(cardLikeButton);
+          cardLikeNumber.textContent = res.likes.length;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
+      requestLikeCard(element._id)
+        .then((res) => {
+          likeCard(cardLikeButton);
+          cardLikeNumber.textContent = res.likes.length;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-    
   });
- 
+
+  if (element.likes.some((elem) => elem._id === userId)) {
+    cardLikeButton.classList.add("card__like-button_is-active");
+  }
+
   cardImage.addEventListener("click", openPopupImage);
   return cardElement;
 }
 
 export function likeCard(evt) {
   if (evt.classList.contains("card__like-button")) {
-    evt.classList.toggle("card__like-button_is-active");  
+    evt.classList.toggle("card__like-button_is-active");
     console.log(evt);
-  } 
+  }
 }
 
 export function deleteCard(card) {

@@ -1,11 +1,8 @@
 .popup__input_type_error {
     outline: none;
     border-bottom-color: rgba(255, 0, 0, 1);
+    
   } 
-
-  .popup__input_type_error_active {
-    color: rgba(255, 0, 0, 1);
-  }
 
   .popup__error_visible {
     font-size: 12px;
@@ -13,7 +10,7 @@
     display: block;
     margin: 0;
     margin-top: 7px;
-    
+    color: rgba(255, 0, 0, 1);
   }
 
   .popup__button_disabled {
