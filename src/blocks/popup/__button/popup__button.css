@@ -11,6 +11,7 @@
   border-radius: 2px;
   border: none;
   transition: visibility 0s, background 0.3s;
+  margin-top: 30px;
 }
 
 .popup__button:hover {
@@ -24,6 +25,6 @@
     line-height: 17px;
   }
 }
-.popup__button-card-chang {
+/*.popup__button-card-chang {
   margin-top: 15px;
-}
+}*/
